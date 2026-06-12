@@ -6,85 +6,80 @@
 /* --- CSS Variables / Design Tokens --- */
 :root,
 [data-theme="light"] {
-  /* Colors — Warm Cream Theme (default) */
-  --bg-primary: #faf9f5;         /* canvas */
-  --bg-secondary: #f5f0e8;       /* surface-soft */
-  --bg-card: #efe9de;            /* surface-card */
-  --bg-card-hover: #e8e0d2;      /* surface-cream-strong */
-  --bg-input: #faf9f5;           /* canvas */
-  --bg-glass: rgba(250, 249, 245, 0.9);
+  /* Colors — Apple Light Mode */
+  --bg-primary: #ffffff;         /* Pure White canvas */
+  --bg-secondary: #f5f5f7;       /* Parchment off-white */
+  --bg-card: #ffffff;
+  --bg-card-hover: #fafafc;      /* Pearl surface */
+  --bg-input: #ffffff;
+  --bg-glass: rgba(245, 245, 247, 0.8);
 
-  --text-primary: #141413;       /* ink */
-  --text-secondary: #3d3d3a;     /* body */
-  --text-muted: #6c6a64;         /* muted */
-  --text-link: #cc785c;          /* primary / coral */
-  --text-link-hover: #a9583e;    /* primary-active */
-  --text-url: #5db8a6;           /* accent-teal */
+  --text-primary: #1d1d1f;       /* Near-Black Ink */
+  --text-secondary: #515154;     /* Muted body */
+  --text-muted: #86868b;         /* Muted caption */
+  --text-link: #0066cc;          /* Action Blue */
+  --text-link-hover: #004bb3;
+  --text-url: #0066cc;
 
-  --accent-primary: #cc785c;     /* coral */
-  --accent-secondary: #e8a55a;   /* accent-amber */
-  --accent-glow: rgba(204, 120, 92, 0.1);
-  --accent-gradient: linear-gradient(135deg, #cc785c, #e8a55a);
+  --accent-primary: #0066cc;     /* Action Blue */
+  --accent-secondary: #2997ff;   /* Sky Blue */
+  --accent-glow: rgba(0, 102, 204, 0.08);
+  --accent-gradient: none;
 
-  --border-color: #e6dfd8;       /* hairline */
-  --border-focus: #cc785c;       /* coral */
+  --border-color: #e0e0e0;       /* Hairline */
+  --border-focus: #0071e3;       /* Focus Blue */
 
-  --highlight-bg: rgba(232, 165, 90, 0.15);
-  --highlight-text: #cc785c;
+  --highlight-bg: rgba(0, 102, 204, 0.1);
+  --highlight-text: #0066cc;
 
-  --shadow-sm: 0 1px 3px rgba(20, 20, 19, 0.05);
-  --shadow-md: 0 4px 12px rgba(20, 20, 19, 0.05);
-  --shadow-lg: 0 8px 32px rgba(20, 20, 19, 0.08);
-  --shadow-glow: 0 0 40px rgba(204, 120, 92, 0.05);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-glow: none;
+  --product-shadow: rgba(0, 0, 0, 0.15) 0px 20px 40px;
 
   /* Typography */
-  --font-serif: var(--font-cormorant), Georgia, serif;
-  --font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   /* Spacing / Rounded */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-sm: 8px;
+  --radius-md: 11px;
+  --radius-lg: 18px;
+  --radius-xl: 18px;
   --radius-full: 9999px;
 
   /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 150ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-base: 250ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-slow: 400ms cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 [data-theme="dark"] {
-  /* Colors — Dark Navy/Slate Theme (inverted) */
-  --bg-primary: #181715;         /* surface-dark */
-  --bg-secondary: #1f1e1b;       /* surface-dark-soft */
-  --bg-card: #252320;            /* surface-dark-elevated */
-  --bg-card-hover: #2f2d29;
-  --bg-input: #1f1e1b;
-  --bg-glass: rgba(24, 23, 21, 0.9);
+  /* Colors — Apple Dark Mode */
+  --bg-primary: #1d1d1f;         /* Near-Black Ink */
+  --bg-secondary: #272729;       /* Near-Black Tile 1 */
+  --bg-card: #2a2a2c;            /* Near-Black Tile 2 */
+  --bg-card-hover: #333335;
+  --bg-input: #272729;
+  --bg-glass: rgba(29, 29, 31, 0.8);
 
-  --text-primary: #faf9f5;       /* on-dark */
-  --text-secondary: #a09d96;     /* on-dark-soft */
-  --text-muted: #8e8b82;         /* muted-soft */
-  --text-link: #cc785c;          /* primary / coral */
-  --text-link-hover: #e8a55a;    /* accent-amber */
-  --text-url: #5db8a6;           /* accent-teal */
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0a5;
+  --text-muted: #86868b;
+  --text-link: #2997ff;          /* Sky Link Blue on Dark */
+  --text-link-hover: #51a8ff;
+  --text-url: #2997ff;
 
-  --accent-primary: #cc785c;
-  --accent-secondary: #e8a55a;
-  --accent-glow: rgba(204, 120, 92, 0.15);
-  --accent-gradient: linear-gradient(135deg, #cc785c, #e8a55a);
+  --accent-primary: #2997ff;
+  --accent-secondary: #0066cc;
+  --accent-glow: rgba(41, 151, 255, 0.15);
 
-  --border-color: #252320;
-  --border-focus: #cc785c;
+  --border-color: #333333;
+  --border-focus: #2997ff;
 
-  --highlight-bg: rgba(232, 165, 90, 0.25);
-  --highlight-text: #e8a55a;
-
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 40px rgba(204, 120, 92, 0.1);
+  --highlight-bg: rgba(41, 151, 255, 0.25);
+  --highlight-text: #2997ff;
 }
 
 /* --- Reset & Base --- */
@@ -214,4 +209,9 @@ a:hover {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Hide Next.js Dev Indicator Watermark */
+nextjs-portal {
+  display: none !important;
 }

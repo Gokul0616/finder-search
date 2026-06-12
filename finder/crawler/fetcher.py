@@ -28,7 +28,7 @@ class FetchResult:
 
 
 class DomainRateLimiter:
-    """Per-domain rate limiter using token bucket algorithm."""
+    """Per-domain rate limiter using token bucket algorithm with per-domain locks."""
 
     def __init__(self, rate: float = 2.0):
         """
@@ -37,11 +37,19 @@ class DomainRateLimiter:
         """
         self._rate = rate
         self._domain_last_request: dict[str, float] = {}
-        self._lock = asyncio.Lock()
+        self._locks: dict[str, asyncio.Lock] = {}
+        self._global_lock = asyncio.Lock()
+
+    async def _get_lock(self, domain: str) -> asyncio.Lock:
+        async with self._global_lock:
+            if domain not in self._locks:
+                self._locks[domain] = asyncio.Lock()
+            return self._locks[domain]
 
     async def acquire(self, domain: str):
         """Wait until we're allowed to make a request to this domain."""
-        async with self._lock:
+        lock = await self._get_lock(domain)
+        async with lock:
             now = time.monotonic()
             last = self._domain_last_request.get(domain, 0.0)
             min_interval = 1.0 / self._rate
@@ -95,8 +103,8 @@ class Fetcher:
                 "Accept-Encoding": "gzip, deflate",
             },
             limits=httpx.Limits(
-                max_connections=self._concurrency * 2,
-                max_keepalive_connections=self._concurrency,
+                max_connections=max(1000, self._concurrency * 4),
+                max_keepalive_connections=max(500, self._concurrency * 2),
             ),
         )
 

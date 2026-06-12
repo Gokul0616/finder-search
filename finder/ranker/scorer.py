@@ -78,6 +78,7 @@ class Scorer:
         if use_es:
             try:
                 from_offset = (page - 1) * size
+                limit = max(200, from_offset + size)
 
                 # Elasticsearch query using multi_match with title boost
                 search_body = {
@@ -103,8 +104,8 @@ class Scorer:
                             },
                         },
                     },
-                    "from": from_offset,
-                    "size": size * 2,  # Fetch extra to re-rank
+                    "from": 0,
+                    "size": limit,  # Fetch enough to re-rank from the top
                     "_source": ["url", "title", "domain", "pagerank_score", "content"],
                     "sort": ["_score"],
                 }
@@ -158,8 +159,8 @@ class Scorer:
                     # Re-rank by combined score
                     results.sort(key=lambda r: r.final_score, reverse=True)
 
-                    # Return only the requested page size
-                    return results[:size], total_hits, took_ms
+                    # Return only the requested page slice
+                    return results[from_offset:from_offset + size], total_hits, took_ms
             except Exception as e:
                 print(f"ES search failed: {e}. Falling back to MongoDB.")
 
@@ -167,13 +168,15 @@ class Scorer:
         try:
             db = Database.get_db()
             from_offset = (page - 1) * size
+            limit = max(200, from_offset + size)
+
             cursor = db.pages.find(
                 {"$text": {"$search": query}, "status": "crawled"},
                 {"score": {"$meta": "textScore"}, "url": 1, "title": 1, "extracted_text": 1, "domain": 1, "pagerank_score": 1}
-            ).sort([("score", {"$meta": "textScore"})]).skip(from_offset)
+            ).sort([("score", {"$meta": "textScore"})])
 
-            # Fetch extra to rerank with pagerank
-            raw_results = await cursor.to_list(length=size * 2)
+            # Fetch extra to rerank with pagerank from the top
+            raw_results = await cursor.to_list(length=limit)
             total_hits = await db.pages.count_documents({"$text": {"$search": query}, "status": "crawled"})
 
             took_ms = (time.time() - start_time) * 1000.0
@@ -219,7 +222,7 @@ class Scorer:
                 ))
 
             results.sort(key=lambda x: x.final_score, reverse=True)
-            return results[:size], total_hits, took_ms
+            return results[from_offset:from_offset + size], total_hits, took_ms
         except Exception as e:
             print(f"MongoDB search fallback failed: {e}")
             # Ultimate fallback: return empty results

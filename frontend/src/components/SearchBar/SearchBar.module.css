@@ -18,7 +18,7 @@
   align-items: center;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   padding: 0 16px;
   transition: all var(--transition-base);
   flex: 1;
@@ -105,7 +105,7 @@
   background: var(--accent-primary);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   font-family: var(--font-family);
   font-size: 0.875rem;
   font-weight: 500;
@@ -129,6 +129,7 @@
 .searchBtnCompact {
   padding: 10px 20px;
   font-size: 0.75rem;
+  border-radius: var(--radius-full);
 }
 
 .kbdHint {

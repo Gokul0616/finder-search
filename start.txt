@@ -6,7 +6,7 @@
 
 cd ~/Desktop/code/Finder
 source venv/bin/activate
-python -m finder serve
+python -m finder serve --reload
 
 # Runs on: http://localhost:8000
 # API docs: http://localhost:8000/docs

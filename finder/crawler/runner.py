@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
 from rich.table import Table
+from elasticsearch import Elasticsearch
 
 from finder.config import settings
 from finder.db.session import Database
@@ -33,18 +34,28 @@ class CrawlRunner:
 
     def __init__(
         self,
-        seed_urls: list[str],
+        seed_urls: list[str] = None,
         max_depth: int = None,
         concurrency: int = None,
+        max_pages_per_domain: int = 50,
     ):
-        self.seed_urls = seed_urls
+        self.seed_urls = seed_urls or []
         self.max_depth = max_depth or settings.crawler_max_depth
         self.concurrency = concurrency or settings.crawler_concurrency
+        self.max_pages_per_domain = max_pages_per_domain
+        self._domain_counts: dict[str, int] = {}
 
         self.frontier = URLFrontier()
         self.fetcher = Fetcher(concurrency=self.concurrency)
         self.robots = RobotsCache()
         self.storage = HTMLStorage()
+
+        # Initialize ES client
+        self._es = None
+        try:
+            self._es = Elasticsearch(settings.elasticsearch_url)
+        except Exception:
+            pass
 
         # Stats
         self._pages_crawled = 0
@@ -52,21 +63,36 @@ class CrawlRunner:
         self._start_time = 0.0
         self._shutdown = False
 
-    async def run(self):
+    async def run(self, close_db: bool = True, handle_signals: bool = True):
         """Execute the crawl."""
         console.print("\n[bold cyan]🔍 Finder Crawler[/bold cyan]")
-        console.print(f"  Seeds: {len(self.seed_urls)} URLs")
+        console.print(f"  Seeds: {len(self.seed_urls)} URLs (will discover more if empty)")
         console.print(f"  Max depth: {self.max_depth}")
         console.print(f"  Concurrency: {self.concurrency}")
         console.print()
 
-        # Connect to MongoDB
-        await Database.connect()
-        console.print("[green]✓[/green] Connected to MongoDB")
+        # Connect to MongoDB if not already connected
+        connected_here = False
+        try:
+            Database.get_db()
+        except RuntimeError:
+            await Database.connect()
+            connected_here = True
+            console.print("[green]✓[/green] Connected to MongoDB")
 
         # Start the HTTP client
         await self.fetcher.start()
         console.print("[green]✓[/green] HTTP client ready")
+
+        # Automatic URL discovery if seed list is empty
+        if not self.seed_urls:
+            await self._discover_and_add_seeds()
+            # Set job's seeds to whatever got loaded
+            self.seed_urls = [entry.url for entry in self.frontier._queue]
+        else:
+            # Load seed URLs into frontier
+            for url in self.seed_urls:
+                self.frontier.add(url, priority=0.0, depth=0)
 
         # Create crawl job record
         job = CrawlJobDocument(
@@ -75,19 +101,16 @@ class CrawlRunner:
         )
         job_id = await crud.create_crawl_job(job)
 
-        # Load seed URLs into frontier
-        for url in self.seed_urls:
-            self.frontier.add(url, priority=0.0, depth=0)
-
         console.print(f"[green]✓[/green] Loaded {self.frontier.size} seed URLs into frontier\n")
 
         # Set up graceful shutdown
-        loop = asyncio.get_event_loop()
-        for sig in (signal.SIGINT, signal.SIGTERM):
-            try:
-                loop.add_signal_handler(sig, self._handle_shutdown)
-            except NotImplementedError:
-                pass  # Windows doesn't support signal handlers in async
+        if handle_signals:
+            loop = asyncio.get_event_loop()
+            for sig in (signal.SIGINT, signal.SIGTERM):
+                try:
+                    loop.add_signal_handler(sig, self._handle_shutdown)
+                except NotImplementedError:
+                    pass  # Windows doesn't support signal handlers in async
 
         self._start_time = time.monotonic()
 
@@ -126,18 +149,67 @@ class CrawlRunner:
         # Print summary
         self._print_summary(elapsed)
 
-        await Database.close()
+        if close_db and connected_here:
+            await Database.close()
+
+    async def _discover_and_add_seeds(self):
+        """Discover seed URLs from MongoDB links or fallback default hubs, and add to frontier."""
+        discovered = []
+        try:
+            db = Database.get_db()
+            # Fetch recent target URLs from links collection to crawl
+            cursor = db.links.find({}, {"target_url": 1}).limit(1000)
+            links = await cursor.to_list(length=1000)
+            target_urls = list(set(link["target_url"] for link in links))
+
+            # Filter to keep only those not yet crawled
+            uncrawled = []
+            for url in target_urls:
+                if not await crud.url_exists(url):
+                    uncrawled.append(url)
+
+            if uncrawled:
+                discovered = uncrawled
+                console.print(f"  [cyan]Frontier[/cyan] Discovered {len(uncrawled)} uncrawled URLs from database links.")
+        except Exception as e:
+            console.print(f"  [yellow]Frontier[/yellow] Seed discovery failed: {e}")
+
+        if not discovered:
+            # Fallback to default hub list
+            default_hubs = [
+                "https://en.wikipedia.org/wiki/Web_search_engine",
+                "https://en.wikipedia.org/wiki/PageRank",
+                "https://news.ycombinator.com/",
+                "https://docs.python.org/3/",
+                "https://developer.mozilla.org/en-US/docs/Web",
+            ]
+            # Clear seen status for these hubs to allow re-crawling
+            for url in default_hubs:
+                normalized = self.frontier.normalize_url(url)
+                if normalized:
+                    url_h = self.frontier.url_hash(normalized)
+                    if url_h in self.frontier._seen_urls:
+                        self.frontier._seen_urls.remove(url_h)
+                discovered.append(url)
+            console.print(f"  [cyan]Frontier[/cyan] Database empty or all crawled. Seeding with {len(discovered)} default hubs.")
+
+        # Load into frontier
+        for url in discovered:
+            self.frontier.add(url, priority=0.0, depth=0)
 
     async def _worker(self, worker_id: int, progress: Progress, task_id):
         """A single crawl worker that processes URLs from the frontier."""
         while not self._shutdown:
             entry = self.frontier.pop()
             if entry is None:
-                # Wait a bit for new URLs to appear, then check again
-                await asyncio.sleep(0.5)
-                # Check again — if still empty and no other workers are adding URLs, stop
+                # Wait a bit for new URLs to appear
+                await asyncio.sleep(2.0)
                 if self.frontier.is_empty():
-                    break
+                    if worker_id == 0:
+                        # Thread 0 will try to discover new links to resume
+                        await self._discover_and_add_seeds()
+                    else:
+                        await asyncio.sleep(2.0)
                 continue
 
             url = entry.url
@@ -146,6 +218,18 @@ class CrawlRunner:
             # Skip if beyond max depth
             if depth > self.max_depth:
                 continue
+
+            # Check domain capping before fetching to prevent single-site hogging
+            domain = urlparse(url).hostname or ""
+            if self._domain_counts.get(domain, 0) >= self.max_pages_per_domain:
+                continue
+
+            # Check if already crawled
+            try:
+                if await crud.url_exists(url):
+                    continue
+            except Exception:
+                pass
 
             # Check robots.txt
             try:
@@ -199,6 +283,29 @@ class CrawlRunner:
             )
             await crud.upsert_page(page)
 
+            # Increment domain count
+            page_domain = page.domain
+            if page_domain:
+                self._domain_counts[page_domain] = self._domain_counts.get(page_domain, 0) + 1
+
+            # Automatically index into Elasticsearch in real-time
+            if self._es:
+                try:
+                    from finder.indexer.es_indexer import INDEX_NAME
+                    doc = {
+                        "url": result.url,
+                        "domain": page.domain,
+                        "title": page.title,
+                        "content": page.extracted_text[:100000],
+                        "pagerank_score": page.pagerank_score,
+                        "crawled_at": page.crawled_at,
+                        "depth": page.depth,
+                    }
+                    if self._es.ping():
+                        self._es.index(index=INDEX_NAME, id=page.content_hash or result.url, document=doc)
+                except Exception:
+                    pass
+
             # Save links to MongoDB
             link_docs = [
                 LinkDocument(
@@ -217,8 +324,10 @@ class CrawlRunner:
                 # Priority increases with depth (lower priority = crawled first)
                 priority = float(new_depth)
                 for link in parse_result.links:
-                    # Only follow links on the same scheme
-                    self.frontier.add(link.url, priority=priority, depth=new_depth)
+                    link_domain = urlparse(link.url).hostname or ""
+                    # Check domain capping to prevent single-domain monopolization
+                    if self._domain_counts.get(link_domain, 0) < self.max_pages_per_domain:
+                        self.frontier.add(link.url, priority=priority, depth=new_depth)
 
             self._pages_crawled += 1
             progress.update(

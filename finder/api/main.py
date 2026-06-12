@@ -1,5 +1,4 @@
-"""FastAPI application — the Finder query server."""
-
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -12,6 +11,7 @@ from finder.db.session import Database
 from finder.db import crud
 from finder.api.schemas import StatsResponse
 from finder.indexer.es_indexer import INDEX_NAME
+from finder.crawler.runner import CrawlRunner
 
 
 @asynccontextmanager
@@ -30,9 +30,22 @@ async def lifespan(app: FastAPI):
     except Exception:
         print("⚠ Elasticsearch not available — search will not work")
 
+    # Start background crawler task with signal handling disabled
+    runner = CrawlRunner(seed_urls=[])
+    crawler_task = asyncio.create_task(runner.run(close_db=False, handle_signals=False))
+    print("✓ Background crawler task spawned")
+
     yield
 
     # Shutdown
+    print("⚠ Shutting down background crawler task...")
+    runner._shutdown = True
+    crawler_task.cancel()
+    try:
+        await crawler_task
+    except asyncio.CancelledError:
+        pass
+
     close_clients()
     await Database.close()
     print("✓ Connections closed")
