@@ -49,25 +49,33 @@
   gap: 28px;
 }
 
-/* Logo — Google-style colorful letters */
+/* Logo — Claude-style warm humanist serif with spike */
 .logoBlock {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 
 .logo {
   font-size: 5.5rem;
   font-weight: 400;
-  letter-spacing: -2px;
+  letter-spacing: -1.5px;
   user-select: none;
-  font-family: var(--font-family);
+  font-family: var(--font-serif);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
-.logoF { color: #4285f4; font-weight: 500; }
-.logoI { color: #ea4335; font-weight: 500; }
-.logoN { color: #fbbc04; font-weight: 500; }
-.logoD { color: #4285f4; font-weight: 500; }
-.logoE { color: #34a853; font-weight: 500; }
-.logoR { color: #ea4335; font-weight: 500; }
+.spike {
+  width: 5rem;
+  height: 5rem;
+  color: var(--accent-primary); /* Coral */
+  flex-shrink: 0;
+}
+
+.logoText {
+  color: var(--text-primary);
+}
 
 /* Stats */
 .stats {

@@ -9,7 +9,7 @@
 .pageBtn {
   padding: 10px 16px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--bg-card);
   color: var(--text-secondary);
   font-family: var(--font-family);
@@ -21,7 +21,7 @@
 .pageBtn:hover:not(:disabled) {
   border-color: var(--accent-primary);
   color: var(--accent-primary);
-  background: var(--accent-glow);
+  background: var(--bg-card-hover);
 }
 
 .pageBtn:disabled {
@@ -30,10 +30,10 @@
 }
 
 .active {
-  background: var(--accent-gradient) !important;
+  background: var(--accent-primary) !important;
   color: white !important;
   border-color: transparent !important;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .active:hover {

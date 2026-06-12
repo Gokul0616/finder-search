@@ -26,17 +26,19 @@
   flex-shrink: 0;
 }
 
-.logoIcon {
-  font-size: 1.5rem;
+.spike {
+  width: 24px;
+  height: 24px;
+  color: var(--accent-primary);
+  flex-shrink: 0;
 }
 
 .logoText {
-  font-size: 1.25rem;
-  font-weight: 700;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 1.35rem;
+  font-weight: 500;
+  font-family: var(--font-serif);
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
 }
 
 .searchArea {

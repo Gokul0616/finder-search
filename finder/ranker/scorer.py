@@ -166,10 +166,11 @@ class Scorer:
         # Fallback to MongoDB text search
         try:
             db = Database.get_db()
+            from_offset = (page - 1) * size
             cursor = db.pages.find(
                 {"$text": {"$search": query}, "status": "crawled"},
                 {"score": {"$meta": "textScore"}, "url": 1, "title": 1, "extracted_text": 1, "domain": 1, "pagerank_score": 1}
-            ).sort([("score", {"$meta": "textScore"})])
+            ).sort([("score", {"$meta": "textScore"})]).skip(from_offset)
 
             # Fetch extra to rerank with pagerank
             raw_results = await cursor.to_list(length=size * 2)
