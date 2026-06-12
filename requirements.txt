@@ -14,6 +14,8 @@ elasticsearch>=8.0
 
 # Graph
 networkx
+numpy
+scipy
 
 # API
 fastapi

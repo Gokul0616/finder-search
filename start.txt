@@ -1,0 +1,46 @@
+========================================
+  Finder Search Engine — Start Commands
+========================================
+
+--- Backend (FastAPI) ---
+
+cd ~/Desktop/code/Finder
+source venv/bin/activate
+python -m finder serve
+
+# Runs on: http://localhost:8000
+# API docs: http://localhost:8000/docs
+
+
+--- Frontend (Next.js) ---
+
+cd ~/Desktop/code/Finder/frontend
+npm run dev
+
+# Runs on: http://localhost:3000
+
+
+--- Full Pipeline (Crawl → Rank → Index → Serve) ---
+
+cd ~/Desktop/code/Finder
+source venv/bin/activate
+python -m finder crawl --seeds scripts/seed_urls.txt --depth 2 --workers 5
+python -m finder rank
+python -m finder index
+python -m finder serve
+
+
+--- Individual Commands ---
+
+python -m finder crawl --seeds scripts/seed_urls.txt    # Crawl web pages
+python -m finder rank                                    # Compute PageRank
+python -m finder index                                   # Index into Elasticsearch
+python -m finder serve                                   # Start API server
+python -m finder stats                                   # Show statistics
+
+
+--- Prerequisites (install once) ---
+
+brew install elasticsearch redis
+brew services start elasticsearch
+brew services start redis

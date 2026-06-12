@@ -26,6 +26,7 @@ class Database:
             IndexModel([("status", ASCENDING)]),
             IndexModel([("crawled_at", DESCENDING)]),
             IndexModel([("pagerank_score", DESCENDING)]),
+            IndexModel([("title", TEXT), ("extracted_text", TEXT)], name="pages_text_index", weights={"title": 3, "extracted_text": 1}),
         ])
 
         # Create indexes for the links collection

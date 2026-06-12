@@ -49,7 +49,7 @@ async def search(
         redis_client = None
 
     # Execute search
-    results, total_hits, took_ms = scorer.search(query=q, page=page, size=size)
+    results, total_hits, took_ms = await scorer.search(query=q, page=page, size=size)
 
     # Build response
     result_items = [
