@@ -1,0 +1,114 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top bar */
+.topBar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 12px 24px;
+  gap: 16px;
+}
+
+.themeBtn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.themeBtn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+  background: var(--accent-glow);
+}
+
+.themeBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Center content */
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  margin-top: -80px; /* Shift up like Google */
+  gap: 28px;
+}
+
+/* Logo — Google-style colorful letters */
+.logoBlock {
+  margin-bottom: 8px;
+}
+
+.logo {
+  font-size: 5.5rem;
+  font-weight: 400;
+  letter-spacing: -2px;
+  user-select: none;
+  font-family: var(--font-family);
+}
+
+.logoF { color: #4285f4; font-weight: 500; }
+.logoI { color: #ea4335; font-weight: 500; }
+.logoN { color: #fbbc04; font-weight: 500; }
+.logoD { color: #4285f4; font-weight: 500; }
+.logoE { color: #34a853; font-weight: 500; }
+.logoR { color: #ea4335; font-weight: 500; }
+
+/* Stats */
+.stats {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.stats strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Footer */
+.footer {
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  padding: 16px 24px;
+}
+
+.footerRow {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .logo {
+    font-size: 3.5rem;
+  }
+
+  .center {
+    margin-top: -40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 2.5rem;
+  }
+}

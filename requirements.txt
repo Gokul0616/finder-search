@@ -1,0 +1,30 @@
+# Crawler
+httpx[http2]
+beautifulsoup4
+lxml
+trafilatura
+
+# Database (MongoDB)
+motor
+pymongo
+dnspython
+
+# Search
+elasticsearch>=8.0
+
+# Graph
+networkx
+
+# API
+fastapi
+uvicorn[standard]
+pydantic-settings
+redis
+
+# NLP
+nltk
+
+# Utils
+python-dotenv
+rich
+click
